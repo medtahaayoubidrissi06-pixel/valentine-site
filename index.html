@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Be My Valentine?</title>
+
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Framer Motion -->
+    <script src="https://unpkg.com/framer-motion@10.15.0/dist/framer-motion.js"></script>
+
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Nunito:wght@400;700&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Nunito', sans-serif;
+            background-color: #ffe6e6;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #root {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            text-align: center;
+            z-index: 10;
+            position: relative;
+            padding: 20px;
+        }
+
+        h1 {
+            font-family: 'Pacifico', cursive;
+            color: #d32f2f;
+            font-size: 3.5rem;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .gif-container img {
+            max-width: 250px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            /* Space between buttons */
+            margin-top: 20px;
+            position: relative;
+            min-height: 100px;
+            width: 400px;
+            /* Constrain width for relative positioning */
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        button {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 700;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            white-space: nowrap;
+        }
+
+        .yes-btn {
+            background-color: #4caf50;
+            color: white;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            z-index: 20;
+        }
+
+        .yes-btn:hover {
+            background-color: #43a047;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .no-btn {
+            background-color: #e57373;
+            /* Red color */
+            color: white;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            position: absolute;
+            /* Needed for movement */
+            z-index: 30;
+            /* Ensure on top */
+            right: 20px;
+            /* Start on the right side */
+            top: 50%;
+            transform: translateY(-50%) !important;
+            /* Center vertically initially */
+        }
+
+        /* Success View */
+        .success-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 1s ease-in;
+        }
+
+        .success-message {
+            font-size: 4rem;
+            color: #c2185b;
+        }
+
+        .bears-img {
+            max-width: 400px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border: 5px solid #fff;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .bg-heart {
+            position: absolute;
+            color: #ef9a9a;
+            opacity: 0.3;
+            z-index: 0;
+            pointer-events: none;
+            animation: floatUp linear infinite;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(110vh) rotate(0deg);
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: translateY(-10vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <!-- React Component Logic -->
+    <script type="text/babel">
+        // Ensure globals are available, handling potentially different export names
+        const { useState, useEffect, useRef } = React;
+        const MotionLib = window.Motion || window.framerMotion || {};
+        const { motion, AnimatePresence } = MotionLib;
+
+        if (!motion) {
+            console.error("Framer Motion library not loaded correctly.");
+            // Fallback for missing motion library
+            document.body.innerHTML += "<div style='display:none'>Motion library missing</div>";
+        }
+
+        const App = () => {
+            const [accepted, setAccepted] = useState(false);
+            const [noCount, setNoCount] = useState(0);
+            const [noBtnPosition, setNoBtnPosition] = useState({ x: 0, y: 0 });
+            const noBtnRef = useRef(null);
+
+            // Initial random hearts background
+            useEffect(() => {
+                const createHeart = () => {
+                    const heart = document.createElement('div');
+                    heart.classList.add('bg-heart');
+                    heart.innerHTML = '❤️';
+                    heart.style.left = Math.random() * 100 + 'vw';
+                    heart.style.fontSize = Math.random() * 20 + 20 + 'px';
+                    heart.style.animationDuration = Math.random() * 5 + 5 + 's';
+                    document.body.appendChild(heart);
+                    setTimeout(() => heart.remove(), 10000);
+                };
+                const interval = setInterval(createHeart, 500);
+                return () => clearInterval(interval);
+            }, []);
+
+            const handleNoHover = () => {
+                setNoCount(prev => prev + 1);
+                // Calculate random position relative to view
+                // We use transform directly so it moves from its initial position
+                const x = (Math.random() - 0.5) * 400; // Move within larger range
+                const y = (Math.random() - 0.5) * 400;
+                setNoBtnPosition({ x, y });
+            };
+
+            const handleAccept = () => {
+                setAccepted(true);
+                // Trigger confetti
+                if (window.confetti) {
+                    confetti({
+                        particleCount: 150,
+                        spread: 70,
+                        origin: { y: 0.6 },
+                        colors: ['#ff0000', '#ffa500', '#ffffff']
+                    });
+
+                    // Fireworks effect
+                    const duration = 5 * 1000;
+                    const animationEnd = Date.now() + duration;
+                    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+                    const randomInRange = (min, max) => Math.random() * (max - min) + min;
+
+                    const interval = setInterval(function () {
+                        const timeLeft = animationEnd - Date.now();
+                        if (timeLeft <= 0) {
+                            return clearInterval(interval);
+                        }
+                        const particleCount = 50 * (timeLeft / duration);
+                        confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                        confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+                    }, 250);
+                }
+            };
+
+            const noTexts = [
+                "No",
+                "Are you sure?",
+                "Really?",
+                "Pookie please?",
+                "Think again!",
+                "Last chance!",
+                "Surely not?",
+                "You might regret this!",
+                "Give it another thought!",
+                "Are you absolutely certain?",
+                "This could be a mistake!",
+                "Have a heart!",
+                "Don't be so cold!",
+                "Change of heart?",
+                "Wouldn't you reconsider?",
+                "Is that your final answer?",
+                "You're breaking my heart ;(",
+                "Pls playing hard to get",
+            ];
+
+            const getNoText = () => {
+                return noTexts[Math.min(noCount, noTexts.length - 1)];
+            };
+
+            // Check if motion.button is available, otherwise fallback to regular button
+            // If MotionLib.motion is undefined, accessing motion.button would crash
+            const ButtonComponent = motion ? motion.button : 'button';
+            const buttonProps = motion ? {
+                animate: { x: noBtnPosition.x, y: noBtnPosition.y },
+                transition: { type: "spring", stiffness: 300, damping: 20 }
+            } : {
+                // Fallback style if motion fails
+                style: { transform: `translate(${noBtnPosition.x}px, ${noBtnPosition.y}px)` }
+            };
+
+            return (
+                <div className="container">
+                    {!accepted ? (
+                        <div id="question-container">
+                            <h1>Will you be my Valentine?</h1>
+                            <div className="gif-container">
+                                <img src="https://media.tenor.com/f1xnRxTRxLAAAAAj/bears-hugging.gif" alt="Cute bears" />
+                            </div>
+                            <div className="buttons">
+                                <ButtonComponent
+                                    className="yes-btn"
+                                    onClick={handleAccept}
+                                    style={{
+                                        transform: `scale(${1 + noCount * 0.1})` // Controlled growth
+                                    }}
+                                    {...(motion ? {
+                                        whileHover: { scale: 1.1 + noCount * 0.1 },
+                                        whileTap: { scale: 0.9 + noCount * 0.1 }
+                                    } : {})}
+                                >
+                                    Yes
+                                </ButtonComponent>
+
+                                <ButtonComponent
+                                    className="no-btn"
+                                    ref={noBtnRef}
+                                    onMouseEnter={handleNoHover}
+                                    onClick={handleNoHover}
+                                    {...buttonProps}
+                                >
+                                    {getNoText()}
+                                </ButtonComponent>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="success-container">
+                            <h1 className="success-message">Yaaaay I knew it! ❤️</h1>
+                            <div className="image-container">
+                                {/* Fallback to online image if local asset doesn't exist/work yet */}
+                                <img
+                                    className="bears-img"
+                                    src="assets/bears.png"
+                                    onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = "https://media.tenor.com/gUiu1zyxfzYAAAAi/bear-kiss-bear-kisses.gif";
+                                    }}
+                                    alt="Bears Hugging"
+                                />
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+
+</html>

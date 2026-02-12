@@ -1,0 +1,5 @@
+node_modules/
+.env
+dist/
+backup_vanilla/
+.DS_Store
