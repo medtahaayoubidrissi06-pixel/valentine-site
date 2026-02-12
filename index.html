@@ -189,6 +189,38 @@
                 opacity: 0;
             }
         }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .buttons {
+                flex-direction: column;
+                gap: 15px;
+                width: 90%;
+            }
+
+            .yes-btn,
+            .no-btn {
+                font-size: 1.2rem;
+                padding: 10px 20px;
+                width: 100%;
+                max-width: 200px;
+            }
+
+            .gif-container img {
+                max-width: 80%;
+            }
+
+            .bears-img {
+                max-width: 90%;
+            }
+
+            .success-message {
+                font-size: 2rem;
+            }
+        }
     </style>
 </head>
 
@@ -233,9 +265,12 @@
             const handleNoHover = () => {
                 setNoCount(prev => prev + 1);
                 // Calculate random position relative to view
-                // We use transform directly so it moves from its initial position
-                const x = (Math.random() - 0.5) * 400; // Move within larger range
-                const y = (Math.random() - 0.5) * 400;
+                // Dynamic bounds based on screen size
+                const maxWidth = Math.min(window.innerWidth - 50, 400);
+                const maxHeight = Math.min(window.innerHeight - 50, 400);
+
+                const x = (Math.random() - 0.5) * maxWidth;
+                const y = (Math.random() - 0.5) * maxHeight;
                 setNoBtnPosition({ x, y });
             };
 
