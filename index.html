@@ -82,6 +82,7 @@
 
         .buttons {
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             gap: 20px;
@@ -89,10 +90,7 @@
             margin-top: 20px;
             position: relative;
             min-height: 100px;
-            width: 400px;
-            /* Constrain width for relative positioning */
-            margin-left: auto;
-            margin-right: auto;
+            width: 100%;
         }
 
         button {
@@ -125,15 +123,8 @@
             color: white;
             padding: 15px 40px;
             font-size: 1.5rem;
-            position: absolute;
-            /* Needed for movement */
             z-index: 30;
             /* Ensure on top */
-            right: 20px;
-            /* Start on the right side */
-            top: 50%;
-            transform: translateY(-50%) !important;
-            /* Center vertically initially */
         }
 
         /* Success View */
